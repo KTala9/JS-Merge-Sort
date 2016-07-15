@@ -1,44 +1,44 @@
+/**
+ * A simple node command line utility which sorts an array using the Merge Sort algorithm.
+ * 
+ * @example 	node mergeSort.js '[3,2,1]'
+ * 
+ * @example 	cat myArray.txt | node mergeSort.js
+ */
 ;(function() {
 	'use strict';
 
-	var input, output,
-		nInputLength,
-		nComplexity = 0;
+	/**
+	 * Sorts an array of numbers in ascending order.
+	 *
+	 * @param      {array}  aToSort  The input array.
+	 * @return     {array}  A sorted array.
+	 */
+	function mergeSort(aToSort) {
+		var nArrayMid,
+			a1, a2,
+			aSorted;
 
-	function createRandomIntArray(length) {
-		var aRandomArray = [], i;
-
-		for (i = 0; i < length; i++) {
-			aRandomArray.push(Math.floor(10000 * Math.random()));
-		}
-
-		return aRandomArray;
-	}
-
-	function mergeSort(a) {
-		var nArrayMid, a1, a2, aSorted, nStartTime;
-
-		nComplexity = nComplexity + 1;
-
-		nStartTime = Date.now();
-
-		if (a.length === 1) {
-			aSorted = a;
+		if (aToSort.length === 1) {
+			aSorted = aToSort;
 		} else {
-			nArrayMid = Math.floor(a.length / 2);
-			a1 = a.slice(0, nArrayMid);
-			a2 = a.slice(nArrayMid, a.length);
+			nArrayMid = Math.floor(aToSort.length / 2);
+			a1 = aToSort.slice(0, nArrayMid);
+			a2 = aToSort.slice(nArrayMid, aToSort.length);
 
-			aSorted = merge(mergeSort(a1).result, mergeSort(a2).result);
+			aSorted = merge(mergeSort(a1), mergeSort(a2));
 		}
 
-		return {
-			result: aSorted,
-			startTime: nStartTime,
-			endTime: Date.now()
-		};
+		return aSorted;
 	}
 
+	/**
+	 * Merges two arrays, assuming both are sorted.
+	 *
+	 * @param      {array}  a1      An array of numbers in ascending order.
+	 * @param      {array}  a2      An array of numbers in ascending order.
+	 * @return     {array}   		An array of all the numbers from a1 and a2, in ascending order.
+	 */
 	function merge(a1, a2) {
 		var nTotalLength = a1.length + a2.length,
 			aMerged = [],
@@ -46,8 +46,6 @@
 			j = 0;
 
 		while (aMerged.length < nTotalLength) {
-			nComplexity = nComplexity + 1;
-
 			if (a1[i] === undefined) {
 				aMerged.push(a2[j]);
 				j = j + 1;
@@ -69,12 +67,28 @@
 		return aMerged;
 	}
 
-	nInputLength = process.argv[2] || 1000;
-	input = createRandomIntArray(nInputLength);
-	output = mergeSort(input);
+	/**
+	 * Parse and sort an input string as an array.
+	 *
+	 * @param      {string or array}  input  	A string (of JSON) containing precisely an array of numbers.
+	 * @return     {array} 				A sorted array.
+	 */
+	function handleInput(input) {
+		return (typeof input === 'string') ? JSON.parse(input) : input;
+	}
 
-	console.log('Original Array: ', input);
-	console.log('Sorted Array: ', output.result);
-	console.log('Execution time: ', output.endTime - output.startTime);
-	console.log('Operations per item: ', nComplexity / nInputLength);
+	// Handle data passed as a command line argument
+	if (process.argv[2]) {
+		console.log(mergeSort(handleInput(process.argv[2])));
+	}
+
+	// Handle data piped via stdin
+	else {
+		process.stdin.resume();
+		process.stdin.setEncoding('utf8');
+		process.stdin.on('data', function(data) {
+			var aSorted = mergeSort(handleInput(data));
+			process.stdout.write( '[' + aSorted.toString() + ']\n');
+		});
+	}
 }());
